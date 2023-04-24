@@ -15,7 +15,7 @@ const (
 	screenHeight = screenWidth
 	wallX        = screenHeight / 21
 	wallY        = wallX
-	radius       = 5
+	radius       = 3
 )
 
 var (
@@ -51,6 +51,7 @@ type Coord struct {
 type player struct {
 	pos Coord
 	vel Coord
+	dir float64
 }
 
 type game struct {
@@ -95,11 +96,28 @@ func (p *player) movePlayer(dtms float64) {
 		p.pos.y += p.vel.y * dtms
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		p.pos.x -= p.vel.x * dtms
+		 p.pos.x -= p.vel.x * dtms
+		 
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		p.pos.x += p.vel.x * dtms
 	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+			p.dir -= 0.05
+		if p.dir< 0 {
+			p.dir += 2 * math.Pi
+		}	
+		p.vel.x = math.Cos(p.dir) * 5
+		p.vel.y = math.Sin(p.dir) * 5
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		p.dir += 0.05
+	if p.dir > 2 {
+		p.dir -= 2 * math.Pi
+	}	
+	p.vel.x = math.Cos(p.dir) * 5
+	p.vel.y = math.Sin(p.dir) * 5
+}
 }
 
 // outer collision
@@ -120,38 +138,13 @@ func (p *player) oCollision() {
 	}
 }
 
-func DrawLineDDA(screen *ebiten.Image, p0x, p0y, p1x, p1y float64, color color.Color) {
-	if math.Abs(p1x-p0x) >= math.Abs(p1y-p0y) {
-		if p0x > p1x {
-			p0x, p1x = p1x, p0x
-			p0y, p1y = p1y, p0y
-		}
-		y := p0y
-		for x := p0x; x <= p1x; x++ {
-			screen.Set(int(x), int(y), color)
-			y += (p1y - p0y) / (p1x - p0x)
-		}
-	} else {
-		if p0y > p1y {
-			p0x, p1x = p1x, p0x
-			p0y, p1y = p1y, p0y
-		}
-		x := p0x
-		for y := p0y; y <= p1y; y++ {
-			screen.Set(int(x), int(y), color)
-			x += (p1x - p0x) / (p1y - p0y)
-		}
-	}
-}
-
-// rotate point
-func rotatePoint(p *Coord, angle float64) *Coord {
-	s := math.Sin(angle)
-	c := math.Cos(angle)
-	xnew := p.x*c - p.y*s
-	ynew := p.x*s + p.y*c
-	return &Coord{xnew, ynew}
-}
+// func (p *player)raycast(screen *ebiten.Image) {
+// 	mx, my := p.pos.x, p.pos.y
+// 	mvx, mvy := p.vel.x, p.vel.y
+// 	for r := 0 ; r < 1; r++ {
+// 		ebitenutil.DrawLine(screen, p.pos.x, p.pos.y, mx+ mvx * 200,my + mvy * 200, color.RGBA{100,100,100,255})
+// 	}
+// }
 
 func (g *game) Layout(outWidth, outHeight int) (w, h int) { return screenWidth, screenHeight }
 func (g *game) Update() error {
@@ -162,13 +155,15 @@ func (g *game) Update() error {
 	g.p.vel.y = 0.1
 	g.p.movePlayer(dt)
 	g.p.oCollision()
+
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{255, 255, 255, 255})
 	mapReader(screen)
 	g.p.drawPlayer(screen)
-	DrawLineDDA(screen, g.p.pos.x, g.p.pos.y, g.p.pos.x+g.p.vel.x+100.1, g.p.pos.y+g.p.vel.y+100.1, color.RGBA{255, 0, 0, 255})
+	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
+	//g.p.raycast(screen)	
 }
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
