@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 	"time"
-
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -57,6 +57,7 @@ type player struct {
 type game struct {
 	p    player
 	last time.Time
+	lenl, mx, my float64
 }
 
 // draw map
@@ -107,17 +108,15 @@ func (p *player) movePlayer(dtms float64) {
 		if p.dir< 0 {
 			p.dir += 2 * math.Pi
 		}	
-		p.vel.x = math.Cos(p.dir) * 5
-		p.vel.y = math.Sin(p.dir) * 5
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
 		p.dir += 0.05
 	if p.dir > 2 {
 		p.dir -= 2 * math.Pi
 	}	
-	p.vel.x = math.Cos(p.dir) * 5
-	p.vel.y = math.Sin(p.dir) * 5
 }
+	p.vel.x += math.Cos(p.dir) * 5
+	p.vel.y += math.Sin(p.dir) * 5
 }
 
 // outer collision
@@ -138,13 +137,41 @@ func (p *player) oCollision() {
 	}
 }
 
-// func (p *player)raycast(screen *ebiten.Image) {
-// 	mx, my := p.pos.x, p.pos.y
-// 	mvx, mvy := p.vel.x, p.vel.y
-// 	for r := 0 ; r < 1; r++ {
-// 		ebitenutil.DrawLine(screen, p.pos.x, p.pos.y, mx+ mvx * 200,my + mvy * 200, color.RGBA{100,100,100,255})
-// 	}
-// }
+func (g *game)raycast() {
+	var distx, disty, mdx, mdy float64
+	mvx, mvy := g.p.vel.x, g.p.vel.y
+	if mvx > 0 {
+		mdx = 1
+		distx = mvx
+	} else if mvx == 0 {
+		mdx = 0
+		distx = mvx
+	} else {
+		mdx = -1
+		distx = -mvx
+	}
+	if mvy > 0 {
+		mdy = 1
+		disty = mvy
+	} else if mvy == 0 {
+		mdy = 0
+		disty = mvx
+	} else {
+		mdy = -1
+		disty = -mvy
+	}
+	stepx := distx + disty
+	stepy := distx + disty
+		if disty < distx {
+			g.lenl = distx
+			disty += stepy
+			g.my += mdy
+		} else {
+			g.lenl = disty
+			disty += stepx
+			g.mx += mdx
+		}
+}
 
 func (g *game) Layout(outWidth, outHeight int) (w, h int) { return screenWidth, screenHeight }
 func (g *game) Update() error {
@@ -155,7 +182,7 @@ func (g *game) Update() error {
 	g.p.vel.y = 0.1
 	g.p.movePlayer(dt)
 	g.p.oCollision()
-
+	g.raycast()
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
@@ -163,14 +190,17 @@ func (g *game) Draw(screen *ebiten.Image) {
 	mapReader(screen)
 	g.p.drawPlayer(screen)
 	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
-	//g.p.raycast(screen)	
+	for r := 0; r < 100; r++ {
+	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx+ g.p.vel.x *float64(r), g.my+ g.p.vel.y *float64(r), color.RGBA{255,255,0,255})	
+	}
+	fmt.Println(g.lenl)
 }
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Into the encoded world")
 	var p player
 	p.newPlayer()
-	if err := ebiten.RunGame(&game{p, time.Now()}); err != nil {
+	if err := ebiten.RunGame(&game{p, time.Now(),0,p.pos.x, p.pos.y}); err != nil {
 		log.Fatal(err)
 	}
 }
