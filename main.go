@@ -5,7 +5,6 @@ import (
 	"log"
 	"math"
 	"time"
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -137,6 +136,10 @@ func (p *player) oCollision() {
 	}
 }
 
+func norm(v Coord) Coord {
+	return Coord{v.x/ math.Sqrt(v.x*v.x + v.y*v.y), v.y/math.Sqrt(v.x*v.x + v.y*v.y)}
+}
+
 func (g *game)raycast() {
 	var distx, disty, mdx, mdy float64
 	mvx, mvy := g.p.vel.x, g.p.vel.y
@@ -190,10 +193,9 @@ func (g *game) Draw(screen *ebiten.Image) {
 	mapReader(screen)
 	g.p.drawPlayer(screen)
 	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
-	for r := 0; r < 100; r++ {
+	for r := -50; r < 50; r++ {
 	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx+ g.p.vel.x *float64(r), g.my+ g.p.vel.y *float64(r), color.RGBA{255,255,0,255})	
 	}
-	fmt.Println(g.lenl)
 }
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
