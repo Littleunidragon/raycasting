@@ -194,7 +194,7 @@ func (g *game) Draw(screen *ebiten.Image) {
 	g.p.drawPlayer(screen)
 	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
 	for r := -50; r < 50; r++ {
-	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx+ g.p.vel.x *float64(r), g.my+ g.p.vel.y *float64(r), color.RGBA{255,255,0,255})	
+	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx+ norm(g.p.vel).x *float64(r), g.my+ norm(g.p.vel).y *float64(r), color.RGBA{255,255,0,255})	
 	}
 }
 func main() {
