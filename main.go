@@ -50,7 +50,7 @@ type Coord struct {
 type player struct {
 	pos Coord
 	vel Coord
-	dir float64
+	dir Coord
 }
 
 type game struct {
@@ -103,19 +103,19 @@ func (p *player) movePlayer(dtms float64) {
 		p.pos.x += p.vel.x * dtms
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
-			p.dir -= 0.05
-		if p.dir< 0 {
-			p.dir += 2 * math.Pi
-		}	
+		// 	p.dir -= 0.05
+		// if p.dir< 0 {
+		// 	p.dir += 2 * math.Pi
+		// }	
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		p.dir += 0.05
-	if p.dir > 2 {
-		p.dir -= 2 * math.Pi
+	// 	p.dir += 0.05
+	// if p.dir > 2 {
+	// 	p.dir -= 2 * math.Pi
 	}	
 }
-	p.vel.x += math.Cos(p.dir) *5
-	p.vel.y += math.Sin(p.dir)*5
+	// p.vel.x += math.Cos(p.dir) *5
+	// p.vel.y += math.Sin(p.dir)*5
 }
 
 // outer collision
@@ -138,6 +138,11 @@ func (p *player) oCollision() {
 
 func norm(v Coord) Coord {
 	return Coord{v.x/ math.Sqrt(v.x*v.x + v.y*v.y), v.y/math.Sqrt(v.x*v.x + v.y*v.y)}
+}
+
+func Rotate(a Coord, angle float64) Coord {
+	a.x, a.y = a.x*math.Cos(angle)-a.y*math.Sin(angle), a.x*math.Sin(angle)+a.y*math.Cos(angle)
+	return a
 }
 
 func (g *game)raycast() {
@@ -201,7 +206,10 @@ func (g *game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{255, 255, 255, 255})
 	mapReader(screen)
 	g.p.drawPlayer(screen)
+	for r := 0; r < screenWidth; r++ {
+	tmp := g.p.dir
 	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
+	}
 	angle:= math.Pi/2
 
 	for r := 0; r < screenWidth; r++ {
