@@ -56,7 +56,7 @@ type player struct {
 type game struct {
 	p    player
 	last time.Time
-	lenl, mx, my float64
+	lenl, mx, my, mvx,mvy float64
 }
 
 // draw map
@@ -114,8 +114,8 @@ func (p *player) movePlayer(dtms float64) {
 		p.dir -= 2 * math.Pi
 	}	
 }
-	p.vel.x += math.Cos(p.dir) * 5
-	p.vel.y += math.Sin(p.dir) * 5
+	p.vel.x += math.Cos(p.dir) *5
+	p.vel.y += math.Sin(p.dir)*5
 }
 
 // outer collision
@@ -142,26 +142,26 @@ func norm(v Coord) Coord {
 
 func (g *game)raycast() {
 	var distx, disty, mdx, mdy float64
-	mvx, mvy := g.p.vel.x, g.p.vel.y
-	if mvx > 0 {
+	g.mvx, g.mvy = g.p.vel.x, g.p.vel.y
+	if g.mvx > 0 {
 		mdx = 1
-		distx = mvx
-	} else if mvx == 0 {
+		distx = g.mvx
+	} else if g.mvx == 0 {
 		mdx = 0
-		distx = mvx
+		distx = g.mvx
 	} else {
 		mdx = -1
-		distx = -mvx
+		distx = -g.mvx
 	}
-	if mvy > 0 {
+	if g.mvy > 0 {
 		mdy = 1
-		disty = mvy
-	} else if mvy == 0 {
+		disty = g.mvy
+	} else if g.mvy == 0 {
 		mdy = 0
-		disty = mvx
+		disty = g.mvx
 	} else {
 		mdy = -1
-		disty = -mvy
+		disty = -g.mvy
 	}
 	stepx := distx + disty
 	stepy := distx + disty
@@ -174,6 +174,15 @@ func (g *game)raycast() {
 			disty += stepx
 			g.mx += mdx
 		}
+	if g.mx > screenWidth{
+		g.mx = screenWidth
+	} else if g.mx <0 {
+		g.mx = 0
+	} else if g.my > screenHeight{
+		g.my = screenHeight
+	}else if g.my < 0 {
+		g.my = 0
+	}
 }
 
 func (g *game) Layout(outWidth, outHeight int) (w, h int) { return screenWidth, screenHeight }
@@ -193,8 +202,11 @@ func (g *game) Draw(screen *ebiten.Image) {
 	mapReader(screen)
 	g.p.drawPlayer(screen)
 	ebitenutil.DrawLine(screen,g.p.pos.x, g.p.pos.y, g.p.pos.x + g.p.vel.x *5, g.p.pos.y + g.p.vel.y *5, color.RGBA{255,0,0,255})
-	for r := -50; r < 50; r++ {
-	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx+ norm(g.p.vel).x *float64(r), g.my+ norm(g.p.vel).y *float64(r), color.RGBA{255,255,0,255})	
+	angle:= math.Pi/2
+
+	for r := 0; r < screenWidth; r++ {
+	angle+=math.Pi/180
+	ebitenutil.DrawLine(screen, g.p.pos.x, g.p.pos.y, g.mx * g.p.dir * angle, g.my * g.p.dir *angle, color.RGBA{255,255,0,255})	
 	}
 }
 func main() {
@@ -202,7 +214,7 @@ func main() {
 	ebiten.SetWindowTitle("Into the encoded world")
 	var p player
 	p.newPlayer()
-	if err := ebiten.RunGame(&game{p, time.Now(),0,p.pos.x, p.pos.y}); err != nil {
+	if err := ebiten.RunGame(&game{p, time.Now(),0,p.pos.x, p.pos.y, 0, 0}); err != nil {
 		log.Fatal(err)
 	}
 }
